@@ -101,7 +101,10 @@ func NewBridge(slackToken, slackChannel, ircServer, ircChannel, ircNick string, 
 				msg := fmt.Sprintf("[%s]: %s", e.User, e.Text)
 				// IRC has problems with newlines, therefore we split the message
 				for _, line := range strings.SplitAfter(msg, "\n") {
-					bridge.irc.Privmsg(bridge.IRCChan, line)
+					// we do not want to send empty lines...
+					if strings.TrimSpace(line) != "" {
+						bridge.irc.Privmsg(bridge.IRCChan, line)
+					}
 				}
 			}
 
