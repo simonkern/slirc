@@ -4,6 +4,7 @@ import (
 	"crypto/tls"
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	ircc "github.com/fluffle/goirc/client"
@@ -98,7 +99,10 @@ func NewBridge(slackToken, slackChannel, ircServer, ircChannel, ircNick string, 
 		func(sc *slack.SlackClient, e *slack.Event) {
 			if e.Channel == bridge.SlackChan && !sc.IsSelfMsg(e) && e.Text != "" {
 				msg := fmt.Sprintf("[%s]: %s", e.User, e.Text)
-				bridge.irc.Privmsg(bridge.IRCChan, msg)
+				// IRC has problems with newlines, therefore we split the message
+				for _, line := range strings.SplitAfter(msg, "\n") {
+					bridge.irc.Privmsg(bridge.IRCChan, line)
+				}
 			}
 
 		})
