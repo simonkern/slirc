@@ -61,9 +61,7 @@ func (sc *SlackClient) readLoop() {
 	defer sc.wg.Done()
 	for {
 
-		var event Event
-
-		err := sc.ws.ReadJSON(&event)
+		messageType, r, err := sc.ws.NextReader()
 		if err != nil {
 			log.Println(err)
 			// If we do not start a seperate Goroutine and return,
@@ -72,6 +70,19 @@ func (sc *SlackClient) readLoop() {
 			return
 		}
 
+		msg, err := ioutil.ReadAll(r)
+		if err != nil {
+			log.Println(err)
+			go sc.handleDisconnect()
+			return
+		}
+
+		var event Event
+		err = json.Unmarshal(msg, &event)
+		if err != nil {
+			log.Printf("Failed to unmarshal the following rawEvent with messageType: %v \n", messageType)
+			log.Println(string(msg))
+		}
 		event.Text = html.UnescapeString(bracketRe.ReplaceAllStringFunc(event.Text, sc.unSlackify))
 
 		sc.idToName(&event)
