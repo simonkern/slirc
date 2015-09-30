@@ -82,6 +82,7 @@ func (sc *SlackClient) readLoop() {
 		if err != nil {
 			log.Printf("Failed to unmarshal the following rawEvent with messageType: %v \n", messageType)
 			log.Println(string(msg))
+			continue
 		}
 		event.Text = html.UnescapeString(bracketRe.ReplaceAllStringFunc(event.Text, sc.unSlackify))
 
