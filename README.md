@@ -26,7 +26,7 @@ import (
 // Slack Chan without "#"-prefix
 func main() {
         slirc.NewBridge("SLACKTOKEN",
-                "slackChan", "IRC-SERVER", "IRCChannel", "IRCNick", false)
+                "slackChan", "IRC-SERVER", "IRCChannel", "IRCNick", true, true)
 
         select {}
 }
