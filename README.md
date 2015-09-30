@@ -6,11 +6,16 @@ description coming soonish
 
 NewBridge has the following signature:
 
-`
-func NewBridge(slackToken, slackChannel, ircServer, ircChannel, ircNick string, ircSSL, insecureSkipVerify bool) (bridge *Bridge) {
-`
+```go
+func NewBridge(slackToken, slackChannel, ircServer, ircChannel, ircNick string, ircSSL, insecureSkipVerify bool) (bridge *Bridge)
+```
 
-`
+
+
+Here is a full example:
+
+
+```go
 package main
 
 import (
@@ -25,4 +30,4 @@ func main() {
 
         select {}
 }
-`
+```
