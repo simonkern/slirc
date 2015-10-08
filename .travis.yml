@@ -14,3 +14,5 @@ install:
   - export GOBIN="$GOPATH/bin"
   - export PATH="$PATH:$GOBIN"
   - go env
+  - go get github.com/gorilla/websocket
+  - go get github.com/fluffle/goirc/client
