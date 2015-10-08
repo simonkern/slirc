@@ -11,4 +11,6 @@ os:
 
 install:
   - go version
+  - export GOBIN="$GOPATH/bin"
+  - export PATH="$PATH:$GOBIN"
   - go env
