@@ -5,9 +5,6 @@ go:
   - release
   - tip
 
-os:
-  - linux
-  - osx
 
 install:
   - go version
