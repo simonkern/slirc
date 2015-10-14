@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/simonkern/slirc.svg)](https://travis-ci.org/simonkern/slirc)
+
 # slirc
 description coming soonish
 
