@@ -13,7 +13,7 @@ func TestEvent(t *testing.T) {
 	channelID := "C11JBA78E"
 	msg := "foo bar bäz!"
 	// contains no IDs
-	se1 := &Event{User: userName, Channel: channelName, Text: msg}
+	se1 := &Event{Username: userName, Channelname: channelName, Text: msg}
 	// contains no name
 	se2 := &Event{UserID: userID, ChannelID: channelID, Text: msg}
 	// contains selfMSG
@@ -29,8 +29,8 @@ func TestEvent(t *testing.T) {
 		t.Fail()
 	}
 
-	if se2.Channel != channelName || se2.User != userName {
-		t.Logf("idToName failed - expected: (%v) (%v) - got: (%v) (%v)", channelName, userName, se2.Channel, se2.User)
+	if se2.Chan() != channelName || se2.Usernick() != userName {
+		t.Logf("idToName failed - expected: (%v) (%v) - got: (%v) (%v)", channelName, userName, se2.Chan(), se2.Usernick())
 		t.Fail()
 	}
 
@@ -39,8 +39,8 @@ func TestEvent(t *testing.T) {
 		t.Fail()
 	}
 
-	if se1.Username() != userName {
-		t.Logf("User mismatch expected: (%v) - got: (%v)", userName, se1.Username())
+	if se1.Usernick() != userName {
+		t.Logf("User mismatch expected: (%v) - got: (%v)", userName, se1.Usernick())
 		t.Fail()
 	}
 

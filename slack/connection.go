@@ -33,7 +33,7 @@ func (sc *SlackClient) Connected() bool {
 }
 
 func (sc *SlackClient) Send(target, msg string) {
-	event := &Event{Type: "message", Channel: target, Text: msg}
+	event := &Event{Type: "message", Channelname: target, Text: msg}
 	sc.send(event)
 }
 
@@ -101,14 +101,14 @@ func (sc *SlackClient) writeLoop() {
 		case event := <-sc.in:
 
 			// replace Channel Name with ID
-			channel, ok := sc.chanMap[event.Channel]
+			channel, ok := sc.chanMap[event.Chan()]
 			if !ok {
-				log.Printf("Unknown Channel %s \n", event.Channel)
+				log.Printf("Unknown Channel %s \n", event.Chan())
 				continue
 			}
-			event.ChannelID = channel.Id
+			event.ChannelID = channel.ID
 			// set event's ID
-			event.Id = sc.nextID
+			event.ID = sc.nextID
 
 			err := sc.ws.WriteJSON(&event)
 			if err != nil {

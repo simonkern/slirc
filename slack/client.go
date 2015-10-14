@@ -2,7 +2,6 @@ package slack
 
 import (
 	"sync"
-	"time"
 
 	"github.com/gorilla/websocket"
 )
@@ -32,7 +31,7 @@ type SlackClient struct {
 }
 
 type Self struct {
-	Id   string
+	ID   string
 	Name string
 }
 
@@ -49,24 +48,6 @@ func (sc *SlackClient) disPatchHandlers(event *Event) {
 			go handler(sc, event)
 		}
 	}
-}
-
-type User struct {
-	Id       string `json:"id"`
-	Name     string `json:"name"`
-	RealName string `json:"real_name"`
-	Deleted  bool   `json:"deleted"`
-	IsBot    bool   `json:"is_bot"`
-	Presence string `json:"presence"` //active, away
-	lastSeen time.Time
-}
-
-type Channel struct {
-	Id         string `json:"id"`
-	Name       string `json:"name"`
-	IsChannel  bool   `json:"is_channel"`
-	Creator    string `json:"creator"`
-	IsArchived bool   `json:"is_archived"`
 }
 
 func NewSlackClient(token string) (sc *SlackClient) {
@@ -96,7 +77,7 @@ func (sc *SlackClient) bookKeeping(apiResp *SlackAPIResponse) {
 	sc.userIDMap = make(map[string]*User)
 	// populate map
 	for i, user := range sc.users {
-		sc.userIDMap[user.Id] = &sc.users[i]
+		sc.userIDMap[user.ID] = &sc.users[i]
 	}
 
 	//create map for Chan lookups by ID
@@ -106,7 +87,7 @@ func (sc *SlackClient) bookKeeping(apiResp *SlackAPIResponse) {
 	// populate maps
 	for i, _ := range sc.channels {
 		channel := &sc.channels[i]
-		sc.chanIDMap[channel.Id] = channel
+		sc.chanIDMap[channel.ID] = channel
 		sc.chanMap[channel.Name] = channel
 	}
 

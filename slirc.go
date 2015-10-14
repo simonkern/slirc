@@ -20,7 +20,7 @@ type Bridge struct {
 }
 
 type messager interface {
-	Username() string
+	Usernick() string
 	Msg() string
 	Chan() string
 }
@@ -97,8 +97,8 @@ func NewBridge(slackToken, slackChannel, ircServer, ircChannel, ircNick string, 
 
 	sc.HandleFunc("message",
 		func(sc *slack.SlackClient, e *slack.Event) {
-			if e.Channel == bridge.SlackChan && !sc.IsSelfMsg(e) && e.Text != "" {
-				msg := fmt.Sprintf("[%s]: %s", e.User, e.Text)
+			if e.Chan() == bridge.SlackChan && !sc.IsSelfMsg(e) && e.Text != "" {
+				msg := fmt.Sprintf("[%s]: %s", e.Usernick(), e.Msg())
 				// IRC has problems with newlines, therefore we split the message
 				for _, line := range strings.SplitAfter(msg, "\n") {
 					// we do not want to send empty lines...
