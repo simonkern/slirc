@@ -48,7 +48,7 @@ func TestBookKeeping(t *testing.T) {
 		if !ok1 || !ok2 || chan1 != chan2 {
 			t.FailNow()
 		}
-		if chan1.Id != k || chan1.Name != v {
+		if chan1.ID != k || chan1.Name != v {
 			t.Fail()
 		}
 	}
@@ -58,7 +58,7 @@ func TestBookKeeping(t *testing.T) {
 		if !ok {
 			t.FailNow()
 		}
-		if user.Id != k || user.Name != v {
+		if user.ID != k || user.Name != v {
 			t.Fail()
 		}
 
