@@ -30,11 +30,16 @@ func NewBridge(slackToken, slackChannel, ircServer, ircChannel, ircNick string, 
 
 	ircCfg := ircc.NewConfig(ircNick)
 	ircCfg.Server = ircServer
-	ircCfg.NewNick = func(n string) string { return n + "_" }
+	ircCfg.NewNick = func(n string) string {
+		if n != ircNick && len(n) > len(ircNick)+2 {
+			return ircNick
+		}
+		return n + "_"
+	}
 	if ircSSL {
 		ircCfg.SSL = true
 		if insecureSkipVerify {
-			ircCfg.SSLConfig = &tls.Config{InsecureSkipVerify: true}
+			ircCfg.SSLConfig = &tls.Config{InsecureSkipVerify: insecureSkipVerify}
 		}
 	}
 	c := ircc.Client(ircCfg)
@@ -69,6 +74,15 @@ func NewBridge(slackToken, slackChannel, ircServer, ircChannel, ircNick string, 
 		func(conn *ircc.Conn, line *ircc.Line) {
 			if line.Target() == bridge.IRCChan {
 				msg := fmt.Sprintf("[%s]: %s", line.Nick, line.Text())
+				bridge.slack.Send(bridge.SlackChan, msg)
+			}
+		})
+
+	// thanks jn__
+	c.HandleFunc(ircc.ACTION,
+		func(conn *ircc.Conn, line *ircc.Line) {
+			if line.Target() == bridge.IRCChan {
+				msg := fmt.Sprintf(" * %s %s", line.Nick, line.Text())
 				bridge.slack.Send(bridge.SlackChan, msg)
 			}
 		})
