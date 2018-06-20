@@ -13,6 +13,17 @@ import (
 	"github.com/gorilla/websocket"
 )
 
+const (
+	// Time allowed to write a message to the peer.
+	writeWait = 10 * time.Second
+
+	// Time allowed to read the next pong message from the peer.
+	pongWait = 60 * time.Second
+
+	// Send pings to peer with this period. Must be less than pongWait.
+	pingPeriod = (pongWait * 9) / 10
+)
+
 // Represents the API response of rtm.start
 // See https://api.slack.com/methods/rtm.start
 type SlackAPIResponse struct {
@@ -59,6 +70,9 @@ func (sc *SlackClient) dispatchLoop() {
 
 func (sc *SlackClient) readLoop() {
 	defer sc.wg.Done()
+
+	sc.ws.SetReadDeadline(time.Now().Add(pongWait))
+	sc.ws.SetPongHandler(func(string) error { sc.ws.SetReadDeadline(time.Now().Add(pongWait)); return nil })
 	for {
 
 		messageType, r, err := sc.ws.NextReader()
@@ -92,7 +106,12 @@ func (sc *SlackClient) readLoop() {
 }
 
 func (sc *SlackClient) writeLoop() {
-	defer sc.wg.Done()
+	ticker := time.NewTicker(pingPeriod)
+
+	defer func() {
+		ticker.Stop()
+		sc.wg.Done()
+	}()
 
 	for {
 		select {
@@ -119,6 +138,11 @@ func (sc *SlackClient) writeLoop() {
 				return
 			}
 			sc.nextID++
+		case <-ticker.C:
+			if err := sc.ws.WriteMessage(websocket.PingMessage, []byte{}); err != nil {
+				go sc.handleDisconnect()
+				return
+			}
 		}
 	}
 }
