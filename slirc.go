@@ -56,8 +56,8 @@ func NewBridge(slackToken, slackChannel, ircServer, ircChannel, ircNick string, 
 
 	c.HandleFunc(ircc.DISCONNECTED,
 		func(conn *ircc.Conn, line *ircc.Line) {
-			bridge.slack.Send(bridge.SlackChan, "Disconnected from IRC. Issuing reconnect...")
-			log.Println("Disconnected from IRC. Issuing reconnect...")
+			bridge.slack.Send(bridge.SlackChan, "Disconnected from IRC. Reconnecting...")
+			log.Println("Disconnected from IRC. Reconnecting...")
 			for {
 				if err := conn.Connect(); err != nil {
 					log.Println("IRC reconnect failed: ", err)
@@ -90,15 +90,15 @@ func NewBridge(slackToken, slackChannel, ircServer, ircChannel, ircNick string, 
 	// Slack Handlers
 	sc.HandleFunc("shutdown",
 		func(sc *slack.SlackClient, e *slack.Event) {
-			bridge.irc.Privmsg(bridge.IRCChan, "Disconnected from Slack.")
-			log.Println("Disconnected from Slack.")
+			bridge.irc.Privmsg(bridge.IRCChan, "Shutting down slack client")
+			log.Println("Shutting down slack client")
 
 		})
 
 	sc.HandleFunc("disconnected",
 		func(sc *slack.SlackClient, e *slack.Event) {
-			bridge.irc.Privmsg(bridge.IRCChan, "Issuing reconnect to Slack...")
-			log.Println("Issuing reconnect to Slack...")
+			bridge.irc.Privmsg(bridge.IRCChan, "Disconnected from Slack. Reconnecting...")
+			log.Println("Disconnected from Slack. Reconnecting...")
 			sc.Connect()
 
 		})
