@@ -29,7 +29,7 @@ type SlackAPIResponse struct {
 	Error    string    `json:"error"`
 	Users    []User    `json:"users"`
 	Channels []Channel `json:"channels"`
-	Url      string    `json:"url"`
+	URL      string    `json:"url"`
 }
 
 const slackAPIEndpoint = "https://slack.com/api/rtm.start"
@@ -40,38 +40,58 @@ func (sc *SlackClient) Connected() bool {
 	return sc.connected
 }
 
-func (sc *SlackClient) Send(target, msg string) {
-	event := &Event{Type: "message", Channelname: target, Text: msg}
-	sc.send(event)
+func (sc *SlackClient) Connect() (err error) {
+	err = sc.connect()
+	return err
 }
 
-func (sc *SlackClient) send(event *Event) {
-	sc.in <- event
-}
-
-func (sc *SlackClient) dispatchLoop() {
-	defer sc.wg.Done()
+func (sc *SlackClient) connect() (err error) {
+	// create quit chan, on which we broadcast goroutine shutdowns
+	sc.quit = make(chan struct{})
 
 	for {
-		select {
-
-		case <-sc.quit:
-			return
-
-		case event := <-sc.out:
-			sc.disPatchHandlers(event)
+		wsAddr, err := sc.startRTM()
+		if err != nil {
+			log.Println("SlackRTMStart failed: ", err)
+			log.Println("Trying again in 30 seconds...")
+			time.Sleep(30 * time.Second)
+			continue
 		}
-
+		err = sc.connectWS(wsAddr)
+		if err != nil {
+			log.Println("SlackWS reconnect failed: ", err)
+			log.Println("Trying again in 30 seconds...")
+			time.Sleep(30 * time.Second)
+			continue
+		}
+		// success
+		break
 	}
+
+	sc.mu.Lock()
+	sc.connected = true
+	sc.mu.Unlock()
+
+	sc.wg.Add(2)
+	go sc.readLoop()
+	go sc.writeLoop()
+
+	connectedEvent := &Event{Type: "connected"}
+	sc.disPatchHandlers(connectedEvent)
+
+	return nil
 }
 
 func (sc *SlackClient) readLoop() {
 	defer sc.wg.Done()
 
 	sc.ws.SetReadDeadline(time.Now().Add(pongWait))
-	sc.ws.SetPongHandler(func(string) error { sc.ws.SetReadDeadline(time.Now().Add(pongWait)); return nil })
-	for {
+	sc.ws.SetPongHandler(func(string) error {
+		sc.ws.SetReadDeadline(time.Now().Add(pongWait))
+		return nil
+	})
 
+	for {
 		messageType, r, err := sc.ws.NextReader()
 		if err != nil {
 			log.Println(err)
@@ -98,24 +118,22 @@ func (sc *SlackClient) readLoop() {
 		event.Text = html.UnescapeString(bracketRe.ReplaceAllStringFunc(event.Text, sc.unSlackify))
 
 		sc.idToName(&event)
-		sc.out <- &event
+		go sc.disPatchHandlers(&event)
 	}
 }
 
 func (sc *SlackClient) writeLoop() {
 	ticker := time.NewTicker(pingPeriod)
 
-	defer func() {
-		ticker.Stop()
-		sc.wg.Done()
-	}()
+	defer ticker.Stop()
+	defer sc.wg.Done()
 
 	for {
 		select {
 		case <-sc.quit:
 			return
-		case event := <-sc.in:
 
+		case event := <-sc.in:
 			// replace Channel Name with ID
 			channel, ok := sc.chanMap[event.Chan()]
 			if !ok {
@@ -152,60 +170,15 @@ func (sc *SlackClient) handleDisconnect() {
 		sc.mu.Unlock()
 		return
 	}
-
-	sc.Close()
 	sc.connected = false
-	close(sc.quit)
 	sc.mu.Unlock()
-
-	// Announce shutdown in progress
-	shutdownEvent := &Event{Type: "shutdown"}
-	sc.disPatchHandlers(shutdownEvent)
+	sc.close()
 
 	// Send disconnected event after all goroutines have been stopped.
 	sc.wg.Wait()
 	log.Println("Slack: stopped all Goroutines.")
 	dcEvent := &Event{Type: "disconnected"}
 	sc.disPatchHandlers(dcEvent)
-
-}
-
-func (sc *SlackClient) connect() (err error) {
-	// create quit chan, on which we broadcast goroutine shutdowns
-	sc.quit = make(chan struct{})
-
-	for {
-		wsAddr, err := sc.startRTM()
-		if err != nil {
-			log.Println("SlackRTMStart failed: ", err)
-			log.Println("Trying again in 30 seconds...")
-			time.Sleep(30 * time.Second)
-			continue
-		}
-		err = sc.connectWS(wsAddr)
-		if err != nil {
-			log.Println("SlackWS reconnect failed: ", err)
-			log.Println("Trying again in 30 seconds...")
-			time.Sleep(30 * time.Second)
-			continue
-		}
-		// success
-		break
-	}
-
-	sc.mu.Lock()
-	sc.connected = true
-	sc.mu.Unlock()
-
-	sc.wg.Add(3)
-	go sc.dispatchLoop()
-	go sc.readLoop()
-	go sc.writeLoop()
-
-	connectedEvent := &Event{Type: "connected"}
-	sc.disPatchHandlers(connectedEvent)
-
-	return nil
 }
 
 // startRTM() calls Slack
@@ -230,7 +203,7 @@ func (sc *SlackClient) startRTM() (wsAddr string, err error) {
 		return "", fmt.Errorf("start.RTM failed: %v", apiResp.Error)
 	}
 	sc.bookKeeping(&apiResp)
-	return apiResp.Url, nil
+	return apiResp.URL, nil
 }
 
 func (sc *SlackClient) connectWS(wsAddr string) (err error) {
@@ -257,7 +230,15 @@ func (sc *SlackClient) connectWS(wsAddr string) (err error) {
 }
 
 func (sc *SlackClient) Close() {
+	// Announce shutdown in progress
+	shutdownEvent := &Event{Type: "shutdown"}
+	sc.disPatchHandlers(shutdownEvent)
+	sc.close()
+}
+
+func (sc *SlackClient) close() {
 	if sc.ws != nil {
 		sc.ws.Close()
 	}
+	close(sc.quit)
 }

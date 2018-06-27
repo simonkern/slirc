@@ -42,8 +42,7 @@ func (sc *SlackClient) HandleFunc(msgType string, hf HandlerFunc) {
 }
 
 func (sc *SlackClient) disPatchHandlers(event *Event) {
-	handlers, ok := sc.handlers[event.Type]
-	if ok {
+	if handlers, ok := sc.handlers[event.Type]; ok {
 		for _, handler := range handlers {
 			go handler(sc, event)
 		}
@@ -52,15 +51,17 @@ func (sc *SlackClient) disPatchHandlers(event *Event) {
 
 func NewSlackClient(token string) (sc *SlackClient) {
 	sc = &SlackClient{SlackToken: token}
-	sc.in = make(chan *Event, 1)
-	sc.out = make(chan *Event, 1)
+	sc.in = make(chan *Event, 3)
 	sc.handlers = make(map[string][]HandlerFunc)
 	return sc
 }
 
-func (sc *SlackClient) Connect() (err error) {
-	err = sc.connect()
-	return err
+func (sc *SlackClient) Send(target, msg string) {
+	sc.send(&Event{Type: "message", Channelname: target, Text: msg})
+}
+
+func (sc *SlackClient) send(event *Event) {
+	sc.in <- event
 }
 
 func (sc *SlackClient) bookKeeping(apiResp *SlackAPIResponse) {
@@ -85,7 +86,7 @@ func (sc *SlackClient) bookKeeping(apiResp *SlackAPIResponse) {
 	//create map for Chan lookups by Name
 	sc.chanMap = make(map[string]*Channel)
 	// populate maps
-	for i, _ := range sc.channels {
+	for i := range sc.channels {
 		channel := &sc.channels[i]
 		sc.chanIDMap[channel.ID] = channel
 		sc.chanMap[channel.Name] = channel
