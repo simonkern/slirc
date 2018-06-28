@@ -22,7 +22,7 @@ type UserEvent struct {
 	ID          int64        `json:"id"` // Every event should have a unique (for that connection) positive integer ID.
 	Error       Error        `json:"error,omitempty"`
 	Type        string       `json:"type"`
-	ChannelID   string       `json:"channel"`
+	ChannelID   string       `json:"channel,omitempty"`
 	Channelname string       `json:"-"`
 	User        *UserProfile `json:"user,omitempty"`
 	Text        string       `json:"text,omitempty"`
