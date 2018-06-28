@@ -17,6 +17,18 @@ type Event struct {
 	Ts          string `json:"ts,omitempty"`
 }
 
+// UserEvent carries a UserProfile instead of a UserID under the `user` key (in contrast to Event)
+type UserEvent struct {
+	ID          int64        `json:"id"` // Every event should have a unique (for that connection) positive integer ID.
+	Error       Error        `json:"error,omitempty"`
+	Type        string       `json:"type"`
+	ChannelID   string       `json:"channel"`
+	Channelname string       `json:"-"`
+	User        *UserProfile `json:"user,omitempty"`
+	Text        string       `json:"text,omitempty"`
+	Ts          string       `json:"ts,omitempty"`
+}
+
 func (se *Event) Usernick() string {
 	return se.Username
 }
@@ -29,7 +41,7 @@ func (se *Event) Chan() string {
 	return se.Channelname
 }
 
-type User struct {
+type UserProfile struct {
 	ID       string `json:"id"`
 	Name     string `json:"name"`
 	RealName string `json:"real_name"`

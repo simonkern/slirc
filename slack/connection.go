@@ -24,12 +24,16 @@ const (
 // Represents the API response of rtm.start
 // See https://api.slack.com/methods/rtm.start
 type SlackAPIResponse struct {
-	Ok       bool      `json:"ok"`
-	Self     Self      `json:"self"`
-	Error    string    `json:"error"`
-	Users    []User    `json:"users"`
-	Channels []Channel `json:"channels"`
-	URL      string    `json:"url"`
+	Ok       bool          `json:"ok"`
+	Self     Self          `json:"self"`
+	Error    string        `json:"error"`
+	Users    []UserProfile `json:"users"`
+	Channels []Channel     `json:"channels"`
+	URL      string        `json:"url"`
+}
+
+type EventType struct {
+	Type string `json:"type"`
 }
 
 const slackAPIEndpoint = "https://slack.com/api/rtm.start"
@@ -108,9 +112,29 @@ func (sc *SlackClient) readLoop() {
 			return
 		}
 
+		// unmarshal to temp struct and check whether it is a bookkeeping event, or a regular event
+		var et EventType
+		if err := json.Unmarshal(msg, &et); err != nil {
+			log.Printf("Failed to unmarshal the following rawEvent with messageType: %v \n", messageType)
+			log.Println(string(msg))
+			continue
+		}
+
+		// bookkeeping event
+		if et.Type == "user_change" || et.Type == "team_join" {
+			var ue UserEvent
+			if err := json.Unmarshal(msg, &ue); err != nil {
+				log.Printf("Failed to unmarshal the following rawEvent with messageType: %v \n", messageType)
+				log.Println(string(msg))
+				continue
+			}
+			sc.updateUser(ue.User)
+			continue
+		}
+
+		// normal event
 		var event Event
-		err = json.Unmarshal(msg, &event)
-		if err != nil {
+		if err := json.Unmarshal(msg, &event); err != nil {
 			log.Printf("Failed to unmarshal the following rawEvent with messageType: %v \n", messageType)
 			log.Println(string(msg))
 			continue

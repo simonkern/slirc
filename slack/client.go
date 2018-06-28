@@ -13,8 +13,8 @@ type SlackClient struct {
 	handlers map[string][]HandlerFunc
 
 	self      Self
-	users     []User
-	userIDMap map[string]*User
+	users     []UserProfile
+	userIDMap map[string]*UserProfile
 	channels  []Channel
 	chanIDMap map[string]*Channel
 	chanMap   map[string]*Channel // lookup by channame
@@ -64,6 +64,10 @@ func (sc *SlackClient) send(event *Event) {
 	sc.in <- event
 }
 
+func (sc *SlackClient) updateUser(userProfile *UserProfile) {
+	sc.userIDMap[userProfile.ID] = userProfile
+}
+
 func (sc *SlackClient) bookKeeping(apiResp *SlackAPIResponse) {
 	// store self infos
 	sc.self = apiResp.Self
@@ -75,7 +79,7 @@ func (sc *SlackClient) bookKeeping(apiResp *SlackAPIResponse) {
 	sc.channels = apiResp.Channels
 
 	// create map for User lookups by ID
-	sc.userIDMap = make(map[string]*User)
+	sc.userIDMap = make(map[string]*UserProfile)
 	// populate map
 	for i, user := range sc.users {
 		sc.userIDMap[user.ID] = &sc.users[i]
