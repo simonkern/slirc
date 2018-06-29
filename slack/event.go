@@ -19,14 +19,14 @@ type Event struct {
 
 // UserEvent carries a UserProfile instead of a UserID under the `user` key (in contrast to Event)
 type UserEvent struct {
-	ID          int64        `json:"id"` // Every event should have a unique (for that connection) positive integer ID.
-	Error       Error        `json:"error,omitempty"`
-	Type        string       `json:"type"`
-	ChannelID   string       `json:"channel,omitempty"`
-	Channelname string       `json:"-"`
-	User        *UserProfile `json:"user,omitempty"`
-	Text        string       `json:"text,omitempty"`
-	Ts          string       `json:"ts,omitempty"`
+	ID          int64  `json:"id"` // Every event should have a unique (for that connection) positive integer ID.
+	Error       Error  `json:"error,omitempty"`
+	Type        string `json:"type"`
+	ChannelID   string `json:"channel,omitempty"`
+	Channelname string `json:"-"`
+	User        *User  `json:"user,omitempty"`
+	Text        string `json:"text,omitempty"`
+	Ts          string `json:"ts,omitempty"`
 }
 
 func (se *Event) Usernick() string {
@@ -41,14 +41,20 @@ func (se *Event) Chan() string {
 	return se.Channelname
 }
 
-type UserProfile struct {
-	ID       string `json:"id"`
-	Name     string `json:"name"`
-	RealName string `json:"real_name"`
-	Deleted  bool   `json:"deleted"`
-	IsBot    bool   `json:"is_bot"`
-	Presence string `json:"presence"` //active, away
-	lastSeen time.Time
+type User struct {
+	ID       string    `json:"id"`
+	Name     string    `json:"name"`
+	RealName string    `json:"real_name,omitempty"`
+	Profile  *Profile  `json:"profile"`
+	Deleted  bool      `json:"deleted"`
+	IsBot    bool      `json:"is_bot"`
+	Presence string    `json:"presence"` //active, away
+	lastSeen time.Time `json:"-"`
+}
+
+type Profile struct {
+	DisplayName           string `json:"display_name"`
+	DisplayNameNormalized string `json:"display_name_normalized,omitempty"`
 }
 
 type Channel struct {
@@ -73,9 +79,12 @@ func (sc *SlackClient) idToName(e *Event) {
 
 	user, ok := sc.userIDMap[e.UserID]
 	if ok {
+		if user.Profile.DisplayName != "" {
+			e.Username = user.Profile.DisplayName
+			return
+		}
 		e.Username = user.Name
 	}
-
 }
 
 func (sc *SlackClient) nameToID(e *Event) {

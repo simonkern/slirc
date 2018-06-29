@@ -24,12 +24,12 @@ const (
 // Represents the API response of rtm.start
 // See https://api.slack.com/methods/rtm.start
 type SlackAPIResponse struct {
-	Ok       bool          `json:"ok"`
-	Self     Self          `json:"self"`
-	Error    string        `json:"error"`
-	Users    []UserProfile `json:"users"`
-	Channels []Channel     `json:"channels"`
-	URL      string        `json:"url"`
+	Ok       bool      `json:"ok"`
+	Self     Self      `json:"self"`
+	Error    string    `json:"error"`
+	Users    []User    `json:"users"`
+	Channels []Channel `json:"channels"`
+	URL      string    `json:"url"`
 }
 
 type EventType struct {
