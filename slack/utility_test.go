@@ -9,7 +9,7 @@ func TestUnslackify(t *testing.T) {
 	sc := setup(t)
 	// all of these should be known
 	raw1 := "<@U11A2B8C1> foobars &lt; &gt; <http://www.test.com> or <http://www.test.com|test.com> in <#C03JAPEHJ> for <mailto:test@example.com|test@example.com>"
-	want1 := "tester1 foobars < > http://www.test.com or http://www.test.com in #dev for test@example.com"
+	want1 := "testorizor1 foobars < > http://www.test.com or http://www.test.com in #dev for test@example.com"
 
 	// contains unknown IDs
 	raw2 := "<@U11A2B8C3> foobars &lt; &gt; <http://www.test.com> or <http://www.test.com|test.com> in <#C03JAPAAA> for <mailto:test@example.com|test@example.com>"

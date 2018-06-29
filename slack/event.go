@@ -1,6 +1,8 @@
 package slack
 
-import "time"
+import (
+	"time"
+)
 
 type Event struct {
 	ID          int64  `json:"id"` // Every event should have a unique (for that connection) positive integer ID.
@@ -79,11 +81,7 @@ func (sc *SlackClient) idToName(e *Event) {
 
 	user, ok := sc.userIDMap[e.UserID]
 	if ok {
-		if user.Profile.DisplayName != "" {
-			e.Username = user.Profile.DisplayName
-			return
-		}
-		e.Username = user.Name
+		e.Username = user.Profile.DisplayName
 	}
 }
 

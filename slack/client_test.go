@@ -9,7 +9,7 @@ func setup(t *testing.T) (sc *SlackClient) {
 	sc = NewSlackClient("foobar")
 	var apiResp SlackAPIResponse
 	if err := json.Unmarshal(rawAPIResp, &apiResp); err != nil {
-		t.Fail()
+		t.Fatal(err)
 	}
 	sc.bookKeeping(&apiResp)
 	return sc
@@ -66,15 +66,15 @@ func TestBookKeeping(t *testing.T) {
 }
 
 var wantUser map[string]string = map[string]string{
-	"U11A2B8C1": "tester1",
-	"U11A2BBCK": "tester2",
-	"U11A2BB4P": "tester3",
-	"U11A2BZTT": "tester4",
+	"U11A2B8C1": "testorizor1",
+	"U11A2BBCK": "testorizor2",
+	"U11A2BB4P": "testorizor3",
+	"U11A2BZTT": "testorizor4",
 	"U11A2B9N9": "litabot",
-	"U11A2BCRJ": "tester5",
-	"U11A2BKMR": "tester6",
+	"U11A2BCRJ": "testorizor5",
+	"U11A2BKMR": "testorizor6",
 	"U11A2BRKS": "slirctest",
-	"U11A2BMFY": "tester7",
+	"U11A2BMFY": "testorizor7",
 }
 
 var wantChan map[string]string = map[string]string{
@@ -145,6 +145,9 @@ var rawAPIResp []byte = []byte(`{
       {  
          "id":"U11A2B8C1",
          "name":"tester1",
+         "profile": {
+          "display_name": "testorizor1"
+         },
          "deleted":false,
          "status":null,
          "color":"3c989f",
@@ -165,6 +168,9 @@ var rawAPIResp []byte = []byte(`{
       {  
          "id":"U11A2BBCK",
          "name":"tester2",
+         "profile": {
+          "display_name": "testorizor2"
+         },
          "deleted":false,
          "status":null,
          "color":"9d8eee",
@@ -185,6 +191,9 @@ var rawAPIResp []byte = []byte(`{
       {  
          "id":"U11A2BB4P",
          "name":"tester3",
+         "profile": {
+          "display_name": "testorizor3"
+         },
          "deleted":false,
          "status":null,
          "color":"9f69e7",
@@ -203,6 +212,9 @@ var rawAPIResp []byte = []byte(`{
       {  
          "id":"U11A2BZTT",
          "name":"tester4",
+         "profile": {
+          "display_name": "testorizor4"
+         },
          "deleted":false,
          "status":null,
          "color":"d1707d",
@@ -221,6 +233,9 @@ var rawAPIResp []byte = []byte(`{
       {  
          "id":"U11A2B9N9",
          "name":"litabot",
+         "profile": {
+          "display_name": "litabot"
+         },
          "deleted":false,
          "status":null,
          "color":"7d414c",
@@ -239,6 +254,9 @@ var rawAPIResp []byte = []byte(`{
       {  
          "id":"U11A2BCRJ",
          "name":"tester5",
+         "profile": {
+          "display_name": "testorizor5"
+         },
          "deleted":false,
          "status":null,
          "color":"5b89d5",
@@ -258,6 +276,9 @@ var rawAPIResp []byte = []byte(`{
       {  
          "id":"U11A2BKMR",
          "name":"tester6",
+         "profile": {
+          "display_name": "testorizor6"
+         },
          "deleted":false,
          "status":null,
          "color":"de5f24",
@@ -276,6 +297,9 @@ var rawAPIResp []byte = []byte(`{
       {  
          "id":"U11A2BRKS",
          "name":"slirctest",
+         "profile": {
+          "display_name": "slirctest"
+         },
          "deleted":false,
          "status":null,
          "color":"7d414c",
@@ -296,6 +320,9 @@ var rawAPIResp []byte = []byte(`{
       {  
          "id":"U11A2BMFY",
          "name":"tester7",
+         "profile": {
+          "display_name": "testorizor7"
+         },
          "deleted":false,
          "status":null,
          "color":"a2a5dc",
@@ -314,6 +341,9 @@ var rawAPIResp []byte = []byte(`{
       {  
          "id":"USLACKBOT",
          "name":"slackbot",
+         "profile": {
+          "display_name": "slackbot"
+         },
          "deleted":false,
          "status":null,
          "color":"757575",

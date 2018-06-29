@@ -7,7 +7,7 @@ import (
 func TestEvent(t *testing.T) {
 	sc := setup(t)
 	userID := "U11A2B8C1"
-	userName := "tester1"
+	userName := "testorizor1"
 	selfID := "U11D00T0"
 	channelName := "slirctest"
 	channelID := "C11JBA78E"
