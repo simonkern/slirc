@@ -58,7 +58,7 @@ func TestBookKeeping(t *testing.T) {
 		if !ok {
 			t.FailNow()
 		}
-		if user.ID != k || user.Name != v {
+		if user.ID != k || user.Profile.DisplayName != v {
 			t.Fail()
 		}
 
