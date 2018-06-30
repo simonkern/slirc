@@ -47,7 +47,7 @@ type User struct {
 	ID       string    `json:"id"`
 	Name     string    `json:"name"`
 	RealName string    `json:"real_name,omitempty"`
-	Profile  *Profile  `json:"profile"`
+	Profile  Profile   `json:"profile"`
 	Deleted  bool      `json:"deleted"`
 	IsBot    bool      `json:"is_bot"`
 	Presence string    `json:"presence"` //active, away
@@ -81,6 +81,10 @@ func (sc *SlackClient) idToName(e *Event) {
 
 	user, ok := sc.userIDMap[e.UserID]
 	if ok {
+		if user.Profile.DisplayName == "" {
+			e.Username = user.Name
+			return
+		}
 		e.Username = user.Profile.DisplayName
 	}
 }

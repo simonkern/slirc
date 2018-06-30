@@ -58,7 +58,7 @@ func TestBookKeeping(t *testing.T) {
 		if !ok {
 			t.FailNow()
 		}
-		if user.ID != k || user.Profile.DisplayName != v {
+		if user.ID != k || (user.Profile.DisplayName != v && user.Name != v) {
 			t.Fail()
 		}
 
@@ -74,7 +74,7 @@ var wantUser map[string]string = map[string]string{
 	"U11A2BCRJ": "testorizor5",
 	"U11A2BKMR": "testorizor6",
 	"U11A2BRKS": "slirctest",
-	"U11A2BMFY": "testorizor7",
+	"U11A2BMFY": "tester7",
 }
 
 var wantChan map[string]string = map[string]string{
@@ -320,9 +320,6 @@ var rawAPIResp []byte = []byte(`{
       {  
          "id":"U11A2BMFY",
          "name":"tester7",
-         "profile": {
-          "display_name": "testorizor7"
-         },
          "deleted":false,
          "status":null,
          "color":"a2a5dc",
