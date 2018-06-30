@@ -15,7 +15,7 @@ import (
 type Bridge struct {
 	SlackChan string
 	IRCChan   string
-	slack     *slack.SlackClient
+	slack     *slack.Client
 	irc       *ircc.Conn
 }
 
@@ -26,7 +26,7 @@ type messager interface {
 }
 
 func NewBridge(slackToken, slackChannel, ircServer, ircChannel, ircNick string, ircSSL, insecureSkipVerify bool) (bridge *Bridge) {
-	sc := slack.NewSlackClient(slackToken)
+	sc := slack.NewClient(slackToken)
 
 	ircCfg := ircc.NewConfig(ircNick)
 	ircCfg.Server = ircServer
@@ -89,14 +89,14 @@ func NewBridge(slackToken, slackChannel, ircServer, ircChannel, ircNick string, 
 
 	// Slack Handlers
 	sc.HandleFunc("shutdown",
-		func(sc *slack.SlackClient, e *slack.Event) {
+		func(sc *slack.Client, e *slack.Event) {
 			bridge.irc.Privmsg(bridge.IRCChan, "Shutting down slack client")
 			log.Println("Shutting down slack client")
 
 		})
 
 	sc.HandleFunc("disconnected",
-		func(sc *slack.SlackClient, e *slack.Event) {
+		func(sc *slack.Client, e *slack.Event) {
 			bridge.irc.Privmsg(bridge.IRCChan, "Disconnected from Slack. Reconnecting...")
 			log.Println("Disconnected from Slack. Reconnecting...")
 			sc.Connect()
@@ -104,13 +104,13 @@ func NewBridge(slackToken, slackChannel, ircServer, ircChannel, ircNick string, 
 		})
 
 	sc.HandleFunc("connected",
-		func(sc *slack.SlackClient, e *slack.Event) {
+		func(sc *slack.Client, e *slack.Event) {
 			bridge.irc.Privmsg(bridge.IRCChan, "Connected to Slack.")
 			log.Println("Connected to Slack.")
 		})
 
 	sc.HandleFunc("message",
-		func(sc *slack.SlackClient, e *slack.Event) {
+		func(sc *slack.Client, e *slack.Event) {
 			if e.Chan() == bridge.SlackChan && !sc.IsSelfMsg(e) && e.Text != "" {
 				msg := fmt.Sprintf("[%s]: %s", e.Usernick(), e.Msg())
 				// IRC has problems with newlines, therefore we split the message

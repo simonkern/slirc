@@ -5,9 +5,9 @@ import (
 	"testing"
 )
 
-func setup(t *testing.T) (sc *SlackClient) {
-	sc = NewSlackClient("foobar")
-	var apiResp SlackAPIResponse
+func setup(t *testing.T) (sc *Client) {
+	sc = NewClient("foobar")
+	var apiResp APIResp
 	if err := json.Unmarshal(rawAPIResp, &apiResp); err != nil {
 		t.Fatal(err)
 	}
@@ -65,7 +65,7 @@ func TestBookKeeping(t *testing.T) {
 	}
 }
 
-var wantUser map[string]string = map[string]string{
+var wantUser = map[string]string{
 	"U11A2B8C1": "testorizor1",
 	"U11A2BBCK": "testorizor2",
 	"U11A2BB4P": "testorizor3",
@@ -77,13 +77,13 @@ var wantUser map[string]string = map[string]string{
 	"U11A2BMFY": "tester7",
 }
 
-var wantChan map[string]string = map[string]string{
+var wantChan = map[string]string{
 	"C11JBA78E": "slirctest",
 	"C03JAPEHJ": "dev",
 	"C0BD11R1N": "devtest",
 }
 
-var rawAPIResp []byte = []byte(`{  
+var rawAPIResp = []byte(`{  
    "ok":true,
    "self":{  
       "id":"U11D00T0",

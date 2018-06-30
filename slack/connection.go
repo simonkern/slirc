@@ -23,7 +23,7 @@ const (
 
 // Represents the API response of rtm.start
 // See https://api.slack.com/methods/rtm.start
-type SlackAPIResponse struct {
+type APIResp struct {
 	Ok       bool      `json:"ok"`
 	Self     Self      `json:"self"`
 	Error    string    `json:"error"`
@@ -38,18 +38,18 @@ type EventType struct {
 
 const slackAPIEndpoint = "https://slack.com/api/rtm.start"
 
-func (sc *SlackClient) Connected() bool {
+func (sc *Client) Connected() bool {
 	sc.mu.RLock()
 	defer sc.mu.RUnlock()
 	return sc.connected
 }
 
-func (sc *SlackClient) Connect() (err error) {
+func (sc *Client) Connect() (err error) {
 	err = sc.connect()
 	return err
 }
 
-func (sc *SlackClient) connect() (err error) {
+func (sc *Client) connect() (err error) {
 	// create quit chan, on which we broadcast goroutine shutdowns
 	sc.quit = make(chan struct{})
 
@@ -86,7 +86,7 @@ func (sc *SlackClient) connect() (err error) {
 	return nil
 }
 
-func (sc *SlackClient) readLoop() {
+func (sc *Client) readLoop() {
 	defer sc.wg.Done()
 
 	sc.ws.SetReadDeadline(time.Now().Add(pongWait))
@@ -146,7 +146,7 @@ func (sc *SlackClient) readLoop() {
 	}
 }
 
-func (sc *SlackClient) writeLoop() {
+func (sc *Client) writeLoop() {
 	ticker := time.NewTicker(pingPeriod)
 
 	defer ticker.Stop()
@@ -186,7 +186,7 @@ func (sc *SlackClient) writeLoop() {
 	}
 }
 
-func (sc *SlackClient) handleDisconnect() {
+func (sc *Client) handleDisconnect() {
 	sc.mu.Lock()
 
 	if !sc.connected {
@@ -206,7 +206,7 @@ func (sc *SlackClient) handleDisconnect() {
 }
 
 // startRTM() calls Slack
-func (sc *SlackClient) startRTM() (wsAddr string, err error) {
+func (sc *Client) startRTM() (wsAddr string, err error) {
 	resp, err := http.PostForm(slackAPIEndpoint, url.Values{"token": {sc.SlackToken}})
 	if err != nil {
 		return "", fmt.Errorf("Failed to obtain websocket address: %v", err)
@@ -218,7 +218,7 @@ func (sc *SlackClient) startRTM() (wsAddr string, err error) {
 		return "", fmt.Errorf("Failed to read API response: %v", err)
 	}
 
-	var apiResp SlackAPIResponse
+	var apiResp APIResp
 	if err = json.Unmarshal(body, &apiResp); err != nil {
 		return
 	}
@@ -230,7 +230,7 @@ func (sc *SlackClient) startRTM() (wsAddr string, err error) {
 	return apiResp.URL, nil
 }
 
-func (sc *SlackClient) connectWS(wsAddr string) (err error) {
+func (sc *Client) connectWS(wsAddr string) (err error) {
 	log.Println("Connecting to Websocket at address:")
 	log.Println(wsAddr)
 	ws, _, err := websocket.DefaultDialer.Dial(wsAddr, nil)
@@ -253,14 +253,14 @@ func (sc *SlackClient) connectWS(wsAddr string) (err error) {
 	return
 }
 
-func (sc *SlackClient) Close() {
+func (sc *Client) Close() {
 	// Announce shutdown in progress
 	shutdownEvent := &Event{Type: "shutdown"}
 	sc.disPatchHandlers(shutdownEvent)
 	sc.close()
 }
 
-func (sc *SlackClient) close() {
+func (sc *Client) close() {
 	if sc.ws != nil {
 		sc.ws.Close()
 	}

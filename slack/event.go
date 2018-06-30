@@ -51,7 +51,7 @@ type User struct {
 	Deleted  bool      `json:"deleted"`
 	IsBot    bool      `json:"is_bot"`
 	Presence string    `json:"presence"` //active, away
-	lastSeen time.Time `json:"-"`
+	LastSeen time.Time `json:"-"`
 }
 
 type Profile struct {
@@ -72,7 +72,7 @@ type Error struct {
 	Msg  string `json:"msg,omitempty"`
 }
 
-func (sc *SlackClient) idToName(e *Event) {
+func (sc *Client) idToName(e *Event) {
 
 	channel, ok := sc.chanIDMap[e.ChannelID]
 	if ok {
@@ -89,7 +89,7 @@ func (sc *SlackClient) idToName(e *Event) {
 	}
 }
 
-func (sc *SlackClient) nameToID(e *Event) {
+func (sc *Client) nameToID(e *Event) {
 	// we only have to convert the channel, since user will be our slackbot anyway
 	channel, ok := sc.chanMap[e.Channelname]
 	if ok {
@@ -98,6 +98,6 @@ func (sc *SlackClient) nameToID(e *Event) {
 
 }
 
-func (sc *SlackClient) IsSelfMsg(event *Event) bool {
+func (sc *Client) IsSelfMsg(event *Event) bool {
 	return event.UserID == sc.self.ID
 }

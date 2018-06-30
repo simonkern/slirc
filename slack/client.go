@@ -6,7 +6,7 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-type SlackClient struct {
+type Client struct {
 	SlackToken string
 	nextID     int64
 
@@ -35,13 +35,13 @@ type Self struct {
 	Name string
 }
 
-type HandlerFunc func(*SlackClient, *Event)
+type HandlerFunc func(*Client, *Event)
 
-func (sc *SlackClient) HandleFunc(msgType string, hf HandlerFunc) {
+func (sc *Client) HandleFunc(msgType string, hf HandlerFunc) {
 	sc.handlers[msgType] = append(sc.handlers[msgType], hf)
 }
 
-func (sc *SlackClient) disPatchHandlers(event *Event) {
+func (sc *Client) disPatchHandlers(event *Event) {
 	if handlers, ok := sc.handlers[event.Type]; ok {
 		for _, handler := range handlers {
 			go handler(sc, event)
@@ -49,26 +49,26 @@ func (sc *SlackClient) disPatchHandlers(event *Event) {
 	}
 }
 
-func NewSlackClient(token string) (sc *SlackClient) {
-	sc = &SlackClient{SlackToken: token}
+func NewClient(token string) (sc *Client) {
+	sc = &Client{SlackToken: token}
 	sc.in = make(chan *Event, 3)
 	sc.handlers = make(map[string][]HandlerFunc)
 	return sc
 }
 
-func (sc *SlackClient) Send(target, msg string) {
+func (sc *Client) Send(target, msg string) {
 	sc.send(&Event{Type: "message", Channelname: target, Text: msg})
 }
 
-func (sc *SlackClient) send(event *Event) {
+func (sc *Client) send(event *Event) {
 	sc.in <- event
 }
 
-func (sc *SlackClient) updateUser(user *User) {
+func (sc *Client) updateUser(user *User) {
 	sc.userIDMap[user.ID] = user
 }
 
-func (sc *SlackClient) bookKeeping(apiResp *SlackAPIResponse) {
+func (sc *Client) bookKeeping(apiResp *APIResp) {
 	// store self infos
 	sc.self = apiResp.Self
 

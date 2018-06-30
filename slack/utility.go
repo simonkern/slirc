@@ -10,7 +10,7 @@ import (
 // are wrapped in unescaped < >
 var bracketRe = regexp.MustCompile("(<.+?>)")
 
-func (sc *SlackClient) unSlackify(str string) string {
+func (sc *Client) unSlackify(str string) string {
 	// Links e.g. <http://heise.de|heise.de>, <http://heise.de>
 	if strings.HasPrefix(str, "<http") {
 		endpos := strings.IndexRune(str, '|')
