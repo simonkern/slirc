@@ -59,6 +59,8 @@ func NewBridge(slackToken, slackChannel, ircServer, ircChannel, ircNick string, 
 	c.HandleFunc(ircc.CONNECTED,
 		func(conn *ircc.Conn, line *ircc.Line) {
 			if ircAuth != nil {
+				log.Println("IRC Authentication")
+				<-time.After(5 * time.Second)
 				conn.Privmsg(ircAuth.Target, ircAuth.Msg)
 				<-time.After(3 * time.Second)
 			}
