@@ -26,7 +26,7 @@ import (
 func main() {
         ircAuth := &slirc.IRCAuth{Target: "NickServ", Msg: "IDENTIFY FooUser BarPassword"}
         slirc.NewBridge("SLACKTOKEN",
-                "slackChan", "IRC-SERVER", "IRCChannel", "IRCNick", true, true, ircAUTH)
+                "slackChan", "IRC-SERVER", "IRCChannel", "IRCNick", true, true, ircAuth)
 
         select {}
 }
