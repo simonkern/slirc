@@ -21,7 +21,7 @@ const (
 	pingPeriod = (pongWait * 9) / 10
 )
 
-// Represents the API response of rtm.start
+// APIResp represents the API response of rtm.start
 // See https://api.slack.com/methods/rtm.start
 type APIResp struct {
 	Ok       bool      `json:"ok"`

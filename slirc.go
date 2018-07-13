@@ -12,6 +12,7 @@ import (
 	"github.com/simonkern/slirc/slack"
 )
 
+// Bridge links an irc and a slack channel
 type Bridge struct {
 	SlackChan string
 	IRCChan   string
@@ -25,7 +26,15 @@ type messager interface {
 	Chan() string
 }
 
-func NewBridge(slackToken, slackChannel, ircServer, ircChannel, ircNick string, ircSSL, insecureSkipVerify bool) (bridge *Bridge) {
+// IRCAuth stores authentification target and the message that needs to be send in order to auth
+// e.g. "NickServ" and "IDENTIFY fooBarPassword"
+type IRCAuth struct {
+	Target string
+	Msg    string
+}
+
+// NewBridge instantiates a Bridge object and sets up the required irc and slack clients
+func NewBridge(slackToken, slackChannel, ircServer, ircChannel, ircNick string, ircSSL, insecureSkipVerify bool, ircAuth *IRCAuth) (bridge *Bridge) {
 	sc := slack.NewClient(slackToken)
 
 	ircCfg := ircc.NewConfig(ircNick)
@@ -49,6 +58,10 @@ func NewBridge(slackToken, slackChannel, ircServer, ircChannel, ircNick string, 
 	// IRC Handlers
 	c.HandleFunc(ircc.CONNECTED,
 		func(conn *ircc.Conn, line *ircc.Line) {
+			if ircAuth != nil {
+				conn.Privmsg(ircAuth.Target, ircAuth.Msg)
+				<-time.After(3 * time.Second)
+			}
 			conn.Join(ircChannel)
 			bridge.slack.Send(bridge.SlackChan, "Connected to IRC.")
 			log.Println("Connected to IRC.")
