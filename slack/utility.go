@@ -29,9 +29,13 @@ func (sc *Client) unSlackify(str string) string {
 		// if we do not have a match, just return the ID.
 		return str[1 : len(str)-1]
 	}
-	// Mail addresses e.g. <mailto:foo@bar.com|foo@bar.com>
+	// Mail addresses e.g. <mailto:foo@bar.com|foo@bar.com>, <mailto:test@example.org>
 	if strings.HasPrefix(str, "<mailto:") {
-		return str[8:strings.IndexRune(str, '|')]
+		endpos := strings.IndexRune(str, '|')
+		if endpos != -1 {
+			return str[8:endpos]
+		}
+		return str[8 : len(str)-1]
 	}
 	// Channels <#C02A2A2A2>
 	if strings.HasPrefix(str, "<#C") {
