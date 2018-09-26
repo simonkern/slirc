@@ -129,7 +129,7 @@ func NewBridge(slackBotToken, slackUserToken, slackChannel, ircServer, ircChanne
 
 	sc.HandleFunc("message",
 		func(sc *slack.Client, e *slack.Event) {
-			if e.Chan() == bridge.SlackChan && !sc.IsSelfMsg(e) && e.Text != "" && e.Usernick() != "rwthirc" {
+			if e.Chan() == bridge.SlackChan && !sc.IsSelfMsg(e) && e.Text != "" {
 				msg := fmt.Sprintf("[%s]: %s", e.Usernick(), e.Msg())
 				// IRC has problems with newlines, therefore we split the message
 				for _, line := range strings.SplitAfter(msg, "\n") {
