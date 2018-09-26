@@ -6,7 +6,7 @@ import (
 
 type Event struct {
 	ID          int64  `json:"id"` // Every event should have a unique (for that connection) positive integer ID.
-	Error       Error  `json:"error,omitempty"`
+	Error       *Error `json:"error,omitempty"`
 	Type        string `json:"type"`
 	ChannelID   string `json:"channel"`
 	Channelname string `json:"-"`
@@ -22,13 +22,19 @@ type Event struct {
 // UserEvent carries a UserProfile instead of a UserID under the `user` key (in contrast to Event)
 type UserEvent struct {
 	ID          int64  `json:"id"` // Every event should have a unique (for that connection) positive integer ID.
-	Error       Error  `json:"error,omitempty"`
+	Error       *Error `json:"error,omitempty"`
 	Type        string `json:"type"`
 	ChannelID   string `json:"channel,omitempty"`
 	Channelname string `json:"-"`
 	User        *User  `json:"user,omitempty"`
 	Text        string `json:"text,omitempty"`
 	Ts          string `json:"ts,omitempty"`
+}
+
+// UserEvent carries a UserProfile instead of a UserID under the `user` key (in contrast to Event)
+type FileEvent struct {
+	Type   string `json:"type"`
+	FileID string `json:"file_id"`
 }
 
 func (se *Event) Usernick() string {
@@ -78,15 +84,7 @@ func (sc *Client) idToName(e *Event) {
 	if ok {
 		e.Channelname = channel.Name
 	}
-
-	user, ok := sc.userIDMap[e.UserID]
-	if ok {
-		if user.Profile.DisplayName == "" {
-			e.Username = user.Name
-			return
-		}
-		e.Username = user.Profile.DisplayName
-	}
+	e.Username = sc.nickForUserID(e.UserID)
 }
 
 func (sc *Client) nameToID(e *Event) {

@@ -88,7 +88,6 @@ func (sc *Client) connect() (err error) {
 
 func (sc *Client) readLoop() {
 	defer sc.wg.Done()
-
 	sc.ws.SetReadDeadline(time.Now().Add(pongWait))
 	sc.ws.SetPongHandler(func(string) error {
 		sc.ws.SetReadDeadline(time.Now().Add(pongWait))
@@ -118,6 +117,19 @@ func (sc *Client) readLoop() {
 			log.Printf("Failed to unmarshal the following rawEvent with messageType: %v \n", messageType)
 			log.Println(string(msg))
 			continue
+		}
+
+		if et.Type == "file_public" {
+			if sc.UserToken != "" {
+				var fe FileEvent
+				if err := json.Unmarshal(msg, &fe); err != nil {
+					log.Printf("Failed to unmarshal the following rawEvent with messageType: %v \n", messageType)
+					log.Println(string(msg))
+					continue
+				}
+				go sc.shareFile(fe.FileID)
+			}
+
 		}
 
 		// bookkeeping event
@@ -207,7 +219,7 @@ func (sc *Client) handleDisconnect() {
 
 // startRTM() calls Slack
 func (sc *Client) startRTM() (wsAddr string, err error) {
-	resp, err := http.PostForm(slackAPIEndpoint, url.Values{"token": {sc.SlackToken}})
+	resp, err := http.PostForm(slackAPIEndpoint, url.Values{"token": {sc.BotToken}})
 	if err != nil {
 		return "", fmt.Errorf("Failed to obtain websocket address: %v", err)
 	}

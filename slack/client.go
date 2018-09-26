@@ -7,13 +7,15 @@ import (
 )
 
 type Client struct {
-	SlackToken string
-	nextID     int64
+	BotToken  string
+	UserToken string
+	nextID    int64
 
 	handlers map[string][]HandlerFunc
 
-	self      Self
-	users     []User
+	self  Self
+	users []User
+
 	userIDMap map[string]*User
 	channels  []Channel
 	chanIDMap map[string]*Channel
@@ -22,6 +24,9 @@ type Client struct {
 	quit chan struct{}
 	in   chan *Event
 	out  chan *Event
+
+	sharemu sync.Mutex
+	shared  map[string]bool
 
 	mu        sync.RWMutex
 	connected bool
@@ -49,10 +54,11 @@ func (sc *Client) disPatchHandlers(event *Event) {
 	}
 }
 
-func NewClient(token string) (sc *Client) {
-	sc = &Client{SlackToken: token}
+func NewClient(botToken string) (sc *Client) {
+	sc = &Client{BotToken: botToken}
 	sc.in = make(chan *Event, 3)
 	sc.handlers = make(map[string][]HandlerFunc)
+	sc.shared = make(map[string]bool)
 	return sc
 }
 

@@ -9,7 +9,7 @@ Slirc links an IRC and a Slack channel.
 NewBridge has the following signature:
 
 ```go
-func NewBridge(slackToken, slackChannel, ircServer, ircChannel, ircNick string, ircSSL, insecureSkipVerify bool, ircAuth *IRCAuth) (bridge *Bridge)
+func NewBridge(slackBotToken, slackUserToken, slackChannel, ircServer, ircChannel, ircNick string, ircSSL bool, tlsConfig *tls.Config, ircAuth *IRCAuth) (bridge *Bridge)
 ```
 
 ### Example with IRC authentication
@@ -25,8 +25,8 @@ import (
 // Slack Chan without "#"-prefix
 func main() {
         ircAuth := &slirc.IRCAuth{Target: "NickServ", Msg: "IDENTIFY FooUser BarPassword"}
-        slirc.NewBridge("SLACKTOKEN",
-                "slackChan", "IRC-SERVER", "IRCChannel", "IRCNick", true, true, ircAuth)
+        slirc.NewBridge("SlackKBotToken", "SlackUserToken",
+                "slackChan", "irc.freenode.net", "IRCChannel", "IRCNick", true,  &tls.Config{ServerName: "irc.freenode.net"}, ircAuth)
 
         select {}
 }
@@ -44,8 +44,8 @@ import (
 // Example without IRC Authentication
 // Slack Chan without "#"-prefix
 func main() {
-        slirc.NewBridge("SLACKTOKEN",
-                "slackChan", "IRC-SERVER", "IRCChannel", "IRCNick", true, true, nil)
+        slirc.NewBridge("SlackKBotToken", "SlackUserToken",
+                "slackChan", "irc.freenode.net", "IRCChannel", "IRCNick", true, &tls.Config{ServerName: "irc.freenode.net"}, nil)
 
         select {}
 }

@@ -10,6 +10,17 @@ import (
 // are wrapped in unescaped < >
 var bracketRe = regexp.MustCompile("(<.+?>)")
 
+func (sc *Client) nickForUserID(userID string) string {
+	user, ok := sc.userIDMap[userID]
+	if ok {
+		if user.Profile.DisplayName == "" {
+			return user.Name
+		}
+		return user.Profile.DisplayName
+	}
+	return userID
+}
+
 func (sc *Client) unSlackify(str string) string {
 	// Links e.g. <http://heise.de|heise.de>, <http://heise.de>
 	if strings.HasPrefix(str, "<http") {

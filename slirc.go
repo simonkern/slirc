@@ -34,10 +34,13 @@ type IRCAuth struct {
 }
 
 // NewBridge instantiates a Bridge object and sets up the required irc and slack clients
-func NewBridge(slackToken, slackChannel, ircServer, ircChannel, ircNick string, ircSSL, insecureSkipVerify bool, ircAuth *IRCAuth) (bridge *Bridge) {
-	sc := slack.NewClient(slackToken)
+func NewBridge(slackBotToken, slackUserToken, slackChannel, ircServer, ircChannel, ircNick string, ircSSL bool, tlsConfig *tls.Config, ircAuth *IRCAuth) (bridge *Bridge) {
+	sc := slack.NewClient(slackBotToken)
 
-	ircCfg := ircc.NewConfig(ircNick)
+	sc.UserToken = slackUserToken
+
+	ircCfg := ircc.NewConfig(ircNick, "slirc", "Powered by Slirc")
+	ircCfg.QuitMessage = "Slack <-> IRC Bridge shutting down"
 	ircCfg.Server = ircServer
 	ircCfg.NewNick = func(n string) string {
 		if n != ircNick && len(n) > len(ircNick)+2 {
@@ -47,8 +50,8 @@ func NewBridge(slackToken, slackChannel, ircServer, ircChannel, ircNick string, 
 	}
 	if ircSSL {
 		ircCfg.SSL = true
-		if insecureSkipVerify {
-			ircCfg.SSLConfig = &tls.Config{InsecureSkipVerify: insecureSkipVerify}
+		if tlsConfig != nil {
+			ircCfg.SSLConfig = tlsConfig
 		}
 	}
 	c := ircc.Client(ircCfg)
@@ -126,7 +129,7 @@ func NewBridge(slackToken, slackChannel, ircServer, ircChannel, ircNick string, 
 
 	sc.HandleFunc("message",
 		func(sc *slack.Client, e *slack.Event) {
-			if e.Chan() == bridge.SlackChan && !sc.IsSelfMsg(e) && e.Text != "" {
+			if e.Chan() == bridge.SlackChan && !sc.IsSelfMsg(e) && e.Text != "" && e.Usernick() != "rwthirc" {
 				msg := fmt.Sprintf("[%s]: %s", e.Usernick(), e.Msg())
 				// IRC has problems with newlines, therefore we split the message
 				for _, line := range strings.SplitAfter(msg, "\n") {
