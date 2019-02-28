@@ -18,7 +18,9 @@ func NewBridge(conf *slirc.Config) (bridge *Bridge)
 package main
 
 import (
-        "github.com/simonkern/slirc"
+		"github.com/simonkern/slirc"
+		
+		ircc "github.com/fluffle/goirc/client"
 )
 
 // Example with IRC Authentication
@@ -57,7 +59,9 @@ func main() {
 package main
 
 import (
-        "github.com/simonkern/slirc"
+		"github.com/simonkern/slirc"
+		
+		ircc "github.com/fluffle/goirc/client"
 )
 
 // Example without IRC Authentication
