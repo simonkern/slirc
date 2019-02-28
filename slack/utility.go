@@ -35,7 +35,12 @@ func (sc *Client) unSlackify(str string) string {
 		userID := str[2 : len(str)-1]
 		user, ok := sc.userIDMap[userID]
 		if ok {
-			return user.Profile.DisplayName
+			if user.Profile.DisplayName != "" {
+				return fmt.Sprint("@", user.Profile.DisplayName)
+			}
+			if user.Name != "" {
+				return fmt.Sprint("@", user.Name)
+			}
 		}
 		// if we do not have a match, just return the ID.
 		return str[1 : len(str)-1]
