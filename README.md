@@ -9,7 +9,7 @@ Slirc links an IRC and a Slack channel.
 NewBridge has the following signature:
 
 ```go
-func NewBridge(slackBotToken, slackUserToken, slackChannel, ircServer, ircChannel, ircNick string, ircSSL bool, tlsConfig *tls.Config, ircAuth *IRCAuth) (bridge *Bridge)
+func NewBridge(conf *slirc.Config) (bridge *Bridge)
 ```
 
 ### Example with IRC authentication
@@ -24,11 +24,23 @@ import (
 // Example with IRC Authentication
 // Slack Chan without "#"-prefix
 func main() {
-        ircAuth := &slirc.IRCAuth{Target: "NickServ", Msg: "IDENTIFY FooUser BarPassword"}
-        slirc.NewBridge("SlackKBotToken", "SlackUserToken",
-                "slackChan", "irc.freenode.net", "IRCChannel", "IRCNick", true,  &tls.Config{ServerName: "irc.freenode.net"}, ircAuth)
+	ircAuth := &slirc.IRCAuth{Target: "NickServ", Msg: "IDENTIFY BotNick Password"}
 
-        select {}
+	conf := &slirc.Config{
+		SlackBotToken:  "xoxb-0123456789-012345678901-5abCdefGhIjkLmN2OpqRSTuV",
+		SlackUserToken: "xoxp-0123456789-012345678901-012345678901-2abcd3e45678901234fg5678901234hi",
+		SlackChan:      "slackChan", //without # prefix
+
+		IRCServer: "irc.freenode.net",
+		IRCChan:   "#ircChanToLink",
+		IRCNick:   "IRCNickname",
+		IRCSSL:    true,
+		IRCAuth:   ircAuth,
+	}
+
+	slirc.NewBridge(conf)
+
+	select {}
 }
 ```
 
@@ -44,9 +56,21 @@ import (
 // Example without IRC Authentication
 // Slack Chan without "#"-prefix
 func main() {
-        slirc.NewBridge("SlackKBotToken", "SlackUserToken",
-                "slackChan", "irc.freenode.net", "IRCChannel", "IRCNick", true, &tls.Config{ServerName: "irc.freenode.net"}, nil)
+	
+	conf := &slirc.Config{
+		SlackBotToken:  "xoxb-0123456789-012345678901-5abCdefGhIjkLmN2OpqRSTuV",
+		SlackUserToken: "xoxp-0123456789-012345678901-012345678901-2abcd3e45678901234fg5678901234hi",
+		SlackChan:      "slackChan", //without # prefix
 
-        select {}
+		IRCServer: "irc.freenode.net",
+		IRCChan:   "#ircChanToLink",
+		IRCNick:   "IRCNickname",
+		IRCSSL:    true,
+		IRCAuth:   nil,
+	}
+
+	slirc.NewBridge(conf)
+
+	select {}
 }
 ```
