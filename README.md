@@ -24,7 +24,14 @@ import (
 // Example with IRC Authentication
 // Slack Chan without "#"-prefix
 func main() {
-	ircAuth := &slirc.IRCAuth{Target: "NickServ", Msg: "IDENTIFY BotNick Password"}
+
+	postConnect := func(ic *ircc.Conn, c *slirc.Config) {
+		log.Println("IRC PostConnect Action")
+		<-time.After(5 * time.Second)
+		log.Println("Authenticating with Nickserv")
+		ic.Privmsg("NickServ", "IDENTIFY BotNick Password")
+		<-time.After(3 * time.Second)
+	}
 
 	conf := &slirc.Config{
 		SlackBotToken:  "xoxb-0123456789-012345678901-5abCdefGhIjkLmN2OpqRSTuV",
@@ -35,7 +42,7 @@ func main() {
 		IRCChan:   "#ircChanToLink",
 		IRCNick:   "IRCNickname",
 		IRCSSL:    true,
-		IRCAuth:   ircAuth,
+		IRCPostConnect: postConnect,
 	}
 
 	slirc.NewBridge(conf)
@@ -66,7 +73,7 @@ func main() {
 		IRCChan:   "#ircChanToLink",
 		IRCNick:   "IRCNickname",
 		IRCSSL:    true,
-		IRCAuth:   nil,
+		IRCPostConnect: nil,
 	}
 
 	slirc.NewBridge(conf)
