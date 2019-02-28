@@ -39,11 +39,11 @@ type Config struct {
 	SlackUserToken string
 	SlackChan      string
 
-	IRCServer string
-	IRCChan   string
-	IRCNick   string
-	IRCSSL    bool
-	IRCAuth   *IRCAuth
+	IRCServer      string
+	IRCChan        string
+	IRCNick        string
+	IRCSSL         bool
+	IRCPostConnect func(ic *ircc.Conn, c *Config)
 }
 
 // NewBridge instantiates a Bridge object and sets up the required irc and slack clients
@@ -72,11 +72,8 @@ func NewBridge(c *Config) (bridge *Bridge) {
 	// IRC Handlers
 	ic.HandleFunc(ircc.CONNECTED,
 		func(conn *ircc.Conn, line *ircc.Line) {
-			if c.IRCAuth != nil {
-				log.Println("IRC Authentication")
-				<-time.After(5 * time.Second)
-				conn.Privmsg(c.IRCAuth.Target, c.IRCAuth.Msg)
-				<-time.After(3 * time.Second)
+			if c.IRCPostConnect != nil {
+				c.IRCPostConnect(ic, c)
 			}
 			conn.Join(c.IRCChan)
 			bridge.slack.Send(bridge.SlackChan, "Connected to IRC.")
