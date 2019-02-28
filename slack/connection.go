@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"strings"
 	"time"
 
 	"github.com/gorilla/websocket"
@@ -152,8 +153,20 @@ func (sc *Client) readLoop() {
 			continue
 		}
 		event.Text = html.UnescapeString(bracketRe.ReplaceAllStringFunc(event.Text, sc.unSlackify))
-
 		sc.idToName(&event)
+
+		// is this a command?
+		if strings.HasPrefix(event.Text, fmt.Sprint("@", sc.self.Name)) {
+			event.Type = "command"
+			if len(event.Text) > len(sc.self.Name)+1 {
+				event.Text = strings.TrimSpace(event.Text[len(sc.self.Name)+1:])
+			}
+			user, ok := sc.userIDMap[event.UserID]
+			if ok && user.IsAdmin {
+				log.Println("admin-command found: ", event.Text)
+				event.Type = "admincommand"
+			}
+		}
 		go sc.disPatchHandlers(&event)
 	}
 }

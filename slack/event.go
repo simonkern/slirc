@@ -56,6 +56,7 @@ type User struct {
 	Profile  Profile   `json:"profile"`
 	Deleted  bool      `json:"deleted"`
 	IsBot    bool      `json:"is_bot"`
+	IsAdmin  bool      `json:"is_admin"`
 	Presence string    `json:"presence"` //active, away
 	LastSeen time.Time `json:"-"`
 }
