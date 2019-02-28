@@ -4,6 +4,7 @@ import (
 	"crypto/tls"
 	"fmt"
 	"log"
+	"os"
 	"strings"
 	"time"
 
@@ -125,6 +126,13 @@ func NewBridge(slackBotToken, slackUserToken, slackChannel, ircServer, ircChanne
 		func(sc *slack.Client, e *slack.Event) {
 			bridge.irc.Privmsg(bridge.IRCChan, "Connected to Slack.")
 			log.Println("Connected to Slack.")
+		})
+
+	sc.HandleFunc("admincommand",
+		func(sc *slack.Client, e *slack.Event) {
+			if e.Msg() == "die" {
+				os.Exit(0)
+			}
 		})
 
 	sc.HandleFunc("message",
