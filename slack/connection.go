@@ -54,25 +54,18 @@ func (sc *Client) connect() (err error) {
 	// create quit chan, on which we broadcast goroutine shutdowns
 	sc.quit = make(chan struct{})
 
-	for {
-		wsAddr, err := sc.startRTM()
-		if err != nil {
-			log.Println("SlackRTMStart failed: ", err)
-			log.Println("Trying again in 30 seconds...")
-			time.Sleep(30 * time.Second)
-			continue
-		}
-		err = sc.connectWS(wsAddr)
-		if err != nil {
-			log.Println("SlackWS reconnect failed: ", err)
-			log.Println("Trying again in 30 seconds...")
-			time.Sleep(30 * time.Second)
-			continue
-		}
-		// success
-		break
+	wsAddr, err := sc.startRTM()
+	if err != nil {
+		log.Println("SlackRTMStart failed: ", err)
+		return err
+	}
+	err = sc.connectWS(wsAddr)
+	if err != nil {
+		log.Println("SlackWS reconnect failed: ", err)
+		return err
 	}
 
+	// success
 	sc.mu.Lock()
 	sc.connected = true
 	sc.mu.Unlock()

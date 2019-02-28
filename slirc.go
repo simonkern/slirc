@@ -34,46 +34,56 @@ type IRCAuth struct {
 	Msg    string
 }
 
+type Config struct {
+	SlackBotToken  string
+	SlackUserToken string
+	SlackChan      string
+
+	IRCServer string
+	IRCChan   string
+	IRCNick   string
+	IRCSSL    bool
+	IRCAuth   *IRCAuth
+}
+
 // NewBridge instantiates a Bridge object and sets up the required irc and slack clients
-func NewBridge(slackBotToken, slackUserToken, slackChannel, ircServer, ircChannel, ircNick string, ircSSL bool, tlsConfig *tls.Config, ircAuth *IRCAuth) (bridge *Bridge) {
-	sc := slack.NewClient(slackBotToken)
+func NewBridge(c *Config) (bridge *Bridge) {
+	sc := slack.NewClient(c.SlackBotToken)
 
-	sc.UserToken = slackUserToken
+	sc.UserToken = c.SlackUserToken
 
-	ircCfg := ircc.NewConfig(ircNick, "slirc", "Powered by Slirc")
+	ircCfg := ircc.NewConfig(c.IRCNick, "slirc", "Powered by Slirc")
 	ircCfg.QuitMessage = "Slack <-> IRC Bridge shutting down"
-	ircCfg.Server = ircServer
+	ircCfg.Server = c.IRCServer
 	ircCfg.NewNick = func(n string) string {
-		if n != ircNick && len(n) > len(ircNick)+2 {
-			return ircNick
+		if n != c.IRCNick && len(n) > len(c.IRCNick)+3 {
+			return c.IRCNick
 		}
 		return n + "_"
 	}
-	if ircSSL {
+	if c.IRCSSL {
 		ircCfg.SSL = true
-		if tlsConfig != nil {
-			ircCfg.SSLConfig = tlsConfig
-		}
+		ircCfg.SSLConfig = &tls.Config{ServerName: c.IRCServer}
 	}
-	c := ircc.Client(ircCfg)
+	ic := ircc.Client(ircCfg)
 
-	bridge = &Bridge{SlackChan: slackChannel, IRCChan: ircChannel, slack: sc, irc: c}
+	bridge = &Bridge{SlackChan: c.SlackChan, IRCChan: c.IRCChan, slack: sc, irc: ic}
 
 	// IRC Handlers
-	c.HandleFunc(ircc.CONNECTED,
+	ic.HandleFunc(ircc.CONNECTED,
 		func(conn *ircc.Conn, line *ircc.Line) {
-			if ircAuth != nil {
+			if c.IRCAuth != nil {
 				log.Println("IRC Authentication")
 				<-time.After(5 * time.Second)
-				conn.Privmsg(ircAuth.Target, ircAuth.Msg)
+				conn.Privmsg(c.IRCAuth.Target, c.IRCAuth.Msg)
 				<-time.After(3 * time.Second)
 			}
-			conn.Join(ircChannel)
+			conn.Join(c.IRCChan)
 			bridge.slack.Send(bridge.SlackChan, "Connected to IRC.")
 			log.Println("Connected to IRC.")
 		})
 
-	c.HandleFunc(ircc.DISCONNECTED,
+	ic.HandleFunc(ircc.DISCONNECTED,
 		func(conn *ircc.Conn, line *ircc.Line) {
 			bridge.slack.Send(bridge.SlackChan, "Disconnected from IRC. Reconnecting...")
 			log.Println("Disconnected from IRC. Reconnecting...")
@@ -89,7 +99,7 @@ func NewBridge(slackBotToken, slackUserToken, slackChannel, ircServer, ircChanne
 			}
 		})
 
-	c.HandleFunc(ircc.PRIVMSG,
+	ic.HandleFunc(ircc.PRIVMSG,
 		func(conn *ircc.Conn, line *ircc.Line) {
 			if line.Target() == bridge.IRCChan {
 				msg := fmt.Sprintf("[%s]: %s", line.Nick, line.Text())
@@ -98,7 +108,7 @@ func NewBridge(slackBotToken, slackUserToken, slackChannel, ircServer, ircChanne
 		})
 
 	// thanks jn__
-	c.HandleFunc(ircc.ACTION,
+	ic.HandleFunc(ircc.ACTION,
 		func(conn *ircc.Conn, line *ircc.Line) {
 			if line.Target() == bridge.IRCChan {
 				msg := fmt.Sprintf(" * %s %s", line.Nick, line.Text())
@@ -118,8 +128,16 @@ func NewBridge(slackBotToken, slackUserToken, slackChannel, ircServer, ircChanne
 		func(sc *slack.Client, e *slack.Event) {
 			bridge.irc.Privmsg(bridge.IRCChan, "Disconnected from Slack. Reconnecting...")
 			log.Println("Disconnected from Slack. Reconnecting...")
-			sc.Connect()
-
+			for {
+				if err := sc.Connect(); err != nil {
+					log.Println("Slack reconnect failed: ", err)
+					log.Println("Trying again in 30 seconds...")
+					time.Sleep(30 * time.Second)
+					continue
+				}
+				// success
+				break
+			}
 		})
 
 	sc.HandleFunc("connected",
@@ -151,7 +169,7 @@ func NewBridge(slackBotToken, slackUserToken, slackChannel, ircServer, ircChanne
 		})
 
 	go func() {
-		if err := c.Connect(); err != nil {
+		if err := ic.Connect(); err != nil {
 			log.Fatal("Could not connect to IRC: ", err)
 		}
 	}()
